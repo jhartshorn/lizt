@@ -90,10 +90,16 @@ class LisztApp {
     }
 
     async createList() {
+        console.log('createList called');
         const name = this.listNameInput.value.trim();
-        if (!name) return;
+        console.log('List name:', name);
+        if (!name) {
+            console.log('No name provided');
+            return;
+        }
 
         try {
+            console.log('Sending request to /api/lists');
             const response = await fetch('/api/lists', {
                 method: 'POST',
                 headers: {
@@ -102,11 +108,15 @@ class LisztApp {
                 body: JSON.stringify({ name }),
             });
 
+            console.log('Response status:', response.status);
             if (response.ok) {
                 const newList = await response.json();
+                console.log('New list created:', newList);
                 this.lists.push(newList);
                 this.renderLists();
                 this.hideNewListModal();
+            } else {
+                console.error('Response not ok:', response.status, response.statusText);
             }
         } catch (error) {
             console.error('Failed to create list:', error);

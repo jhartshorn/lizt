@@ -9,7 +9,6 @@ RUN npm install --only=production
 # Copy application files
 COPY server.js ./
 COPY public ./public
-COPY data ./data
 
 # Set permissions and create data directory
 RUN mkdir -p data && chown -R node:node /app

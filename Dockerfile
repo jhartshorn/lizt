@@ -1,23 +1,20 @@
 FROM node:18-alpine
 
+# Create app directory and set ownership first
+RUN mkdir -p /app && chown -R node:node /app
+
 WORKDIR /app
+USER node
 
 # Copy package files and install dependencies
-COPY package*.json ./
+COPY --chown=node:node package*.json ./
 RUN npm install --only=production
 
-# Copy application files and create data directory as root
-COPY server.js ./
-COPY public ./public
-RUN mkdir -p data && chmod 777 data
-
-# Change ownership of only necessary files/directories to node user
-RUN chown -R node:node server.js public data && \
-    ls -la data && \
-    ls -la /app
+# Copy application files and create data directory
+COPY --chown=node:node server.js ./
+COPY --chown=node:node public ./public
+RUN mkdir -p data
 
 EXPOSE 3737
-
-USER node
 
 CMD ["npm", "start"]

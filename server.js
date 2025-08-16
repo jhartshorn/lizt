@@ -1,0 +1,99 @@
+const express = require('express');
+const bodyParser = require('body-parser');
+const fs = require('fs').promises;
+const path = require('path');
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+const DATA_FILE = path.join(__dirname, 'data', 'lists.json');
+
+app.use(bodyParser.json());
+app.use(express.static('public'));
+
+async function loadLists() {
+  try {
+    const data = await fs.readFile(DATA_FILE, 'utf8');
+    return JSON.parse(data);
+  } catch (error) {
+    return [];
+  }
+}
+
+async function saveLists(lists) {
+  await fs.mkdir(path.dirname(DATA_FILE), { recursive: true });
+  await fs.writeFile(DATA_FILE, JSON.stringify(lists, null, 2));
+}
+
+app.get('/api/lists', async (req, res) => {
+  try {
+    const lists = await loadLists();
+    res.json(lists);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to load lists' });
+  }
+});
+
+app.post('/api/lists', async (req, res) => {
+  try {
+    const { name } = req.body;
+    const lists = await loadLists();
+    const newList = {
+      id: Date.now().toString(),
+      name,
+      items: [],
+      createdAt: new Date().toISOString()
+    };
+    lists.push(newList);
+    await saveLists(lists);
+    res.json(newList);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to create list' });
+  }
+});
+
+app.get('/api/lists/:id', async (req, res) => {
+  try {
+    const lists = await loadLists();
+    const list = lists.find(l => l.id === req.params.id);
+    if (!list) {
+      return res.status(404).json({ error: 'List not found' });
+    }
+    res.json(list);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to load list' });
+  }
+});
+
+app.put('/api/lists/:id', async (req, res) => {
+  try {
+    const lists = await loadLists();
+    const index = lists.findIndex(l => l.id === req.params.id);
+    if (index === -1) {
+      return res.status(404).json({ error: 'List not found' });
+    }
+    lists[index] = { ...lists[index], ...req.body };
+    await saveLists(lists);
+    res.json(lists[index]);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update list' });
+  }
+});
+
+app.delete('/api/lists/:id', async (req, res) => {
+  try {
+    const lists = await loadLists();
+    const filteredLists = lists.filter(l => l.id !== req.params.id);
+    await saveLists(filteredLists);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete list' });
+  }
+});
+
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.listen(PORT, () => {
+  console.log(`Lizt app running on port ${PORT}`);
+});

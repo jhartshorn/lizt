@@ -4,7 +4,8 @@
       "Bash(mkdir:*)",
       "Bash(git remote add:*)",
       "Bash(docker run:*)",
-      "Bash(docker-compose run:*)"
+      "Bash(docker-compose run:*)",
+      "Bash(ls:*)"
     ],
     "deny": []
   }

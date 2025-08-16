@@ -6,16 +6,16 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install --only=production
 
-# Switch to node user before copying application files
-USER node
-
-# Copy application files
-COPY --chown=node:node server.js ./
-COPY --chown=node:node public ./public
-
-# Create data directory
+# Copy application files and create data directory as root
+COPY server.js ./
+COPY public ./public
 RUN mkdir -p data
 
+# Change ownership of only necessary files/directories to node user
+RUN chown -R node:node server.js public data
+
 EXPOSE 3737
+
+USER node
 
 CMD ["npm", "start"]

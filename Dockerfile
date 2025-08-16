@@ -8,7 +8,7 @@ RUN npm install --only=production
 
 COPY . .
 
-RUN mkdir -p data
+RUN mkdir -p data && chown -R node:node /app
 
 EXPOSE 3000
 

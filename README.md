@@ -51,12 +51,16 @@ npm start
 
 The application will be available at `http://localhost:3000`
 
-### Using Docker
+### Using Docker (Recommended for Production)
 
 Build and run with Docker Compose:
 ```bash
-docker-compose up
+docker-compose up --build
 ```
+
+The application will be available at `http://localhost:3737`
+
+Data persistence is handled automatically with Docker volumes, avoiding permission issues.
 
 ## API Endpoints
 

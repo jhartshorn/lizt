@@ -4,6 +4,9 @@ class LisztApp {
         this.lists = [];
         this.currentList = null;
         this.draggedItem = null;
+        this.touchStartY = 0;
+        this.touchStartElement = null;
+        this.placeholder = null;
         
         this.initializeElements();
         this.attachEventListeners();
@@ -229,6 +232,7 @@ class LisztApp {
         const checkbox = li.querySelector('.item-checkbox');
         const deleteBtn = li.querySelector('.item-delete');
         const textSpan = li.querySelector('.item-text');
+        const dragHandle = li.querySelector('.drag-handle');
 
         checkbox.addEventListener('change', async () => {
             item.completed = checkbox.checked;
@@ -243,6 +247,7 @@ class LisztApp {
         });
 
         this.addDragAndDropListeners(li, item);
+        this.addTouchListeners(dragHandle, li, item);
 
         return li;
     }
@@ -283,6 +288,90 @@ class LisztApp {
                 await this.reorderItems(this.draggedItem, item);
             }
         });
+    }
+
+    addTouchListeners(dragHandle, li, item) {
+        dragHandle.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            this.touchStartY = e.touches[0].clientY;
+            this.touchStartElement = li;
+            this.draggedItem = item;
+            
+            li.classList.add('dragging');
+            
+            // Create placeholder
+            this.placeholder = li.cloneNode(true);
+            this.placeholder.classList.add('placeholder');
+            this.placeholder.style.opacity = '0.5';
+        }, { passive: false });
+
+        dragHandle.addEventListener('touchmove', (e) => {
+            if (!this.touchStartElement) return;
+            
+            e.preventDefault();
+            const touch = e.touches[0];
+            const currentY = touch.clientY;
+            
+            // Find the element under the touch point
+            const elementBelow = document.elementFromPoint(touch.clientX, currentY);
+            const listItem = elementBelow?.closest('.list-item');
+            
+            if (listItem && listItem !== this.touchStartElement && listItem !== this.placeholder) {
+                const rect = listItem.getBoundingClientRect();
+                const midY = rect.top + rect.height / 2;
+                
+                if (currentY < midY) {
+                    listItem.parentNode.insertBefore(this.placeholder, listItem);
+                } else {
+                    listItem.parentNode.insertBefore(this.placeholder, listItem.nextSibling);
+                }
+            }
+        }, { passive: false });
+
+        dragHandle.addEventListener('touchend', async (e) => {
+            if (!this.touchStartElement) return;
+            
+            e.preventDefault();
+            
+            // Find the target item based on placeholder position
+            const placeholderIndex = Array.from(this.placeholder.parentNode.children).indexOf(this.placeholder);
+            const targetItem = this.currentList.items.find((_, index) => index === placeholderIndex);
+            
+            if (targetItem && targetItem.id !== this.draggedItem.id) {
+                await this.reorderItemsByIndex(this.draggedItem, placeholderIndex);
+            }
+            
+            // Clean up
+            if (this.placeholder && this.placeholder.parentNode) {
+                this.placeholder.parentNode.removeChild(this.placeholder);
+            }
+            
+            this.touchStartElement.classList.remove('dragging');
+            this.touchStartElement = null;
+            this.draggedItem = null;
+            this.placeholder = null;
+            
+            this.renderListItems();
+        }, { passive: false });
+    }
+
+    async reorderItemsByIndex(draggedItem, targetIndex) {
+        const items = this.currentList.items;
+        const draggedIndex = items.findIndex(i => i.id === draggedItem.id);
+        
+        // Remove the dragged item
+        items.splice(draggedIndex, 1);
+        
+        // Insert at new position
+        const newIndex = draggedIndex < targetIndex ? targetIndex - 1 : targetIndex;
+        items.splice(newIndex, 0, draggedItem);
+
+        // Update order
+        items.forEach((item, index) => {
+            item.order = index;
+        });
+
+        await this.updateList();
     }
 
     async reorderItems(draggedItem, targetItem) {

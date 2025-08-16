@@ -253,6 +253,12 @@ header {
     border-top: 3px solid #667eea;
 }
 
+.list-item.placeholder {
+    opacity: 0.5;
+    background: #f0f0f0;
+    border: 2px dashed #ccc;
+}
+
 .item-checkbox {
     margin-right: 1rem;
     width: 20px;

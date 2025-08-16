@@ -338,11 +338,11 @@ class LisztApp {
             e.preventDefault();
             
             // Find the target item based on placeholder position
-            const placeholderIndex = Array.from(this.placeholder.parentNode.children).indexOf(this.placeholder);
-            const targetItem = this.currentList.items.find((_, index) => index === placeholderIndex);
-            
-            if (targetItem && targetItem.id !== this.draggedItem.id) {
-                await this.reorderItemsByIndex(this.draggedItem, placeholderIndex);
+            if (this.placeholder && this.placeholder.parentNode) {
+                const placeholderIndex = Array.from(this.placeholder.parentNode.children).indexOf(this.placeholder);
+                if (placeholderIndex >= 0) {
+                    await this.reorderItemsByIndex(this.draggedItem, placeholderIndex);
+                }
             }
             
             // Clean up
@@ -363,12 +363,16 @@ class LisztApp {
         const items = this.currentList.items;
         const draggedIndex = items.findIndex(i => i.id === draggedItem.id);
         
+        if (draggedIndex === targetIndex) return; // No change needed
+        
         // Remove the dragged item
         items.splice(draggedIndex, 1);
         
+        // Adjust target index if dragging down (since we removed an item before the target)
+        const adjustedIndex = draggedIndex < targetIndex ? targetIndex - 1 : targetIndex;
+        
         // Insert at new position
-        const newIndex = draggedIndex < targetIndex ? targetIndex - 1 : targetIndex;
-        items.splice(newIndex, 0, draggedItem);
+        items.splice(adjustedIndex, 0, draggedItem);
 
         // Update order
         items.forEach((item, index) => {

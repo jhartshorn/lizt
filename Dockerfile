@@ -9,7 +9,7 @@ RUN npm install --only=production
 # Copy application files and create data directory as root
 COPY server.js ./
 COPY public ./public
-RUN mkdir -p data
+RUN mkdir -p data && chmod 755 data
 
 # Change ownership of only necessary files/directories to node user
 RUN chown -R node:node server.js public data

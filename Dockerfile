@@ -14,7 +14,7 @@ COPY data ./data
 # Set permissions and create data directory
 RUN mkdir -p data && chown -R node:node /app
 
-EXPOSE 3000
+EXPOSE 3737
 
 USER node
 

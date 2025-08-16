@@ -212,6 +212,30 @@ header {
     background: white;
 }
 
+.drag-handle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    margin-right: 1rem;
+    color: #ccc;
+    cursor: grab;
+    font-size: 12px;
+    line-height: 1;
+    user-select: none;
+    touch-action: none;
+    transition: color 0.2s ease;
+}
+
+.drag-handle:hover {
+    color: #667eea;
+}
+
+.list-item.dragging .drag-handle {
+    cursor: grabbing;
+}
+
 .list-item:last-child {
     border-bottom: none;
 }

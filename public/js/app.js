@@ -220,6 +220,7 @@ class LisztApp {
         li.dataset.itemId = item.id;
         
         li.innerHTML = `
+            <div class="drag-handle">⋮⋮</div>
             <input type="checkbox" class="item-checkbox" ${item.completed ? 'checked' : ''}>
             <span class="item-text ${item.completed ? 'completed' : ''}">${this.escapeHtml(item.text)}</span>
             <button class="item-delete">×</button>

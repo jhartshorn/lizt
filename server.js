@@ -35,18 +35,30 @@ app.get('/api/lists', async (req, res) => {
 
 app.post('/api/lists', async (req, res) => {
   try {
+    console.log('POST /api/lists called');
+    console.log('Request body:', req.body);
     const { name } = req.body;
+    console.log('List name:', name);
+    
     const lists = await loadLists();
+    console.log('Current lists:', lists);
+    
     const newList = {
       id: Date.now().toString(),
       name,
       items: [],
       createdAt: new Date().toISOString()
     };
+    console.log('New list object:', newList);
+    
     lists.push(newList);
+    console.log('About to save lists...');
     await saveLists(lists);
+    console.log('Lists saved successfully');
+    
     res.json(newList);
   } catch (error) {
+    console.error('Error in POST /api/lists:', error);
     res.status(500).json({ error: 'Failed to create list' });
   }
 });

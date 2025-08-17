@@ -151,6 +151,9 @@ class LisztApp {
             this.currentList = await response.json();
             this.currentListId = listId;
             
+            // Ensure all items have synchronized tags
+            this.synchronizeAllTags();
+            
             this.listTitle.textContent = this.currentList.name;
             this.renderListItems();
             
@@ -498,17 +501,57 @@ class LisztApp {
         return text.replace(/#([\w]+)/g, '<span class="hashtag">#$1</span>');
     }
 
-    getDisplayText(item) {
-        let displayText = this.escapeHtml(item.text);
+    synchronizeAllTags() {
+        if (!this.currentList || !this.currentList.items) return;
         
-        // If item has tags that aren't in the text, add them
-        if (item.tags && item.tags.length > 0) {
-            const textTags = this.extractHashtags(item.text);
-            const extraTags = item.tags.filter(tag => !textTags.includes(tag));
-            
-            if (extraTags.length > 0) {
-                displayText += ' ' + extraTags.join(' ');
+        let needsUpdate = false;
+        this.currentList.items.forEach(item => {
+            if (this.synchronizeItemTags(item)) {
+                needsUpdate = true;
             }
+        });
+        
+        // Save if any items were updated
+        if (needsUpdate) {
+            this.updateList();
+        }
+    }
+
+    synchronizeItemTags(item) {
+        // Extract hashtags from text
+        const textTags = this.extractHashtags(item.text);
+        
+        // Initialize tags array if it doesn't exist
+        if (!item.tags) {
+            item.tags = [];
+        }
+        
+        // Check if synchronization is needed
+        const currentTags = [...item.tags];
+        const allTags = [...new Set([...textTags, ...item.tags])];
+        
+        // Update tags array to include all tags
+        if (JSON.stringify(currentTags.sort()) !== JSON.stringify(allTags.sort())) {
+            item.tags = allTags;
+            return true; // Item was updated
+        }
+        
+        return false; // No update needed
+    }
+
+    getDisplayText(item) {
+        // Ensure tags are synchronized first
+        this.synchronizeItemTags(item);
+        
+        // Remove hashtags from text and show separately
+        let cleanText = item.text.replace(/#[\w]+/g, '').trim();
+        cleanText = cleanText.replace(/\s+/g, ' '); // Clean up extra spaces
+        
+        let displayText = this.escapeHtml(cleanText);
+        
+        // Add all tags at the end
+        if (item.tags && item.tags.length > 0) {
+            displayText += ' ' + item.tags.join(' ');
         }
         
         return this.highlightHashtags(displayText);
@@ -586,7 +629,26 @@ class LisztApp {
 
     async saveItemTags() {
         if (this.currentEditingItem) {
-            this.currentEditingItem.tags = [...this.currentEditingTags];
+            const item = this.currentEditingItem;
+            
+            // Update tags array
+            item.tags = [...this.currentEditingTags];
+            
+            // Remove hashtags that are no longer in tags from the text
+            const textTags = this.extractHashtags(item.text);
+            const removedTags = textTags.filter(tag => !item.tags.includes(tag));
+            
+            // Strip removed hashtags from text
+            let updatedText = item.text;
+            removedTags.forEach(tag => {
+                // Use word boundary to avoid partial matches
+                const regex = new RegExp(`\\s*${tag.replace('#', '\\#')}\\b`, 'g');
+                updatedText = updatedText.replace(regex, '');
+            });
+            
+            // Clean up extra spaces
+            item.text = updatedText.replace(/\s+/g, ' ').trim();
+            
             await this.updateList();
             this.renderListItems();
         }

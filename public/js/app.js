@@ -526,6 +526,18 @@ class LisztApp {
             this.saveEdit(item, editInput, textSpan);
         });
 
+        // Allow normal cursor positioning when clicking in the input
+        editInput.addEventListener('click', (e) => {
+            // If text is selected, allow this click to position cursor normally
+            if (editInput.selectionStart === 0 && editInput.selectionEnd === editInput.value.length) {
+                // On next tick, position cursor at click location
+                setTimeout(() => {
+                    const clickPosition = this.getClickPosition(editInput, e);
+                    editInput.setSelectionRange(clickPosition, clickPosition);
+                }, 0);
+            }
+        });
+
         this.addDragAndDropListeners(li, item);
         this.addTouchListeners(dragHandle, li, item);
 
@@ -871,6 +883,40 @@ class LisztApp {
             this.renderListItems();
         }
         this.hideTagsModal();
+    }
+
+    getClickPosition(input, event) {
+        // Create a temporary span to measure text width
+        const span = document.createElement('span');
+        span.style.font = window.getComputedStyle(input).font;
+        span.style.position = 'absolute';
+        span.style.visibility = 'hidden';
+        span.style.whiteSpace = 'pre';
+        document.body.appendChild(span);
+        
+        const inputRect = input.getBoundingClientRect();
+        const clickX = event.clientX - inputRect.left - parseInt(window.getComputedStyle(input).paddingLeft);
+        
+        // Binary search to find the character position
+        let left = 0;
+        let right = input.value.length;
+        let bestMatch = 0;
+        
+        while (left <= right) {
+            const mid = Math.floor((left + right) / 2);
+            span.textContent = input.value.substring(0, mid);
+            const width = span.offsetWidth;
+            
+            if (width <= clickX) {
+                bestMatch = mid;
+                left = mid + 1;
+            } else {
+                right = mid - 1;
+            }
+        }
+        
+        document.body.removeChild(span);
+        return bestMatch;
     }
 
     escapeHtml(text) {

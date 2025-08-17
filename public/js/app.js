@@ -260,7 +260,7 @@ class LisztApp {
                 <div class="drag-line"></div>
             </div>
             <input type="checkbox" class="item-checkbox" ${item.completed ? 'checked' : ''}>
-            <span class="item-text ${item.completed ? 'completed' : ''}">${this.highlightHashtags(this.escapeHtml(item.text))}</span>
+            <span class="item-text ${item.completed ? 'completed' : ''}">${this.getDisplayText(item)}</span>
             <input type="text" class="item-edit-input hidden" value="${this.escapeHtml(item.text)}" maxlength="200">
             <button class="item-tags">🏷️</button>
             <button class="item-delete">×</button>
@@ -475,7 +475,7 @@ class LisztApp {
         editInput.value = item.text;
         editInput.classList.add('hidden');
         textSpan.classList.remove('hidden');
-        textSpan.textContent = item.text;
+        textSpan.innerHTML = this.getDisplayText(item);
     }
 
     extractHashtags(text) {
@@ -496,6 +496,22 @@ class LisztApp {
 
     highlightHashtags(text) {
         return text.replace(/#([\w]+)/g, '<span class="hashtag">#$1</span>');
+    }
+
+    getDisplayText(item) {
+        let displayText = this.escapeHtml(item.text);
+        
+        // If item has tags that aren't in the text, add them
+        if (item.tags && item.tags.length > 0) {
+            const textTags = this.extractHashtags(item.text);
+            const extraTags = item.tags.filter(tag => !textTags.includes(tag));
+            
+            if (extraTags.length > 0) {
+                displayText += ' ' + extraTags.join(' ');
+            }
+        }
+        
+        return this.highlightHashtags(displayText);
     }
 
     showTagsModal(item) {

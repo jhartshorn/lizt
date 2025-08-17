@@ -38,14 +38,33 @@
                 <ul id="list-items" class="list-items"></ul>
 
                 <div class="list-operations">
-                    <div class="export-dropdown">
-                        <button id="export-list-btn" class="export-btn">Export ▼</button>
-                        <div id="export-dropdown-menu" class="dropdown-menu hidden">
-                            <button id="export-download-btn" class="dropdown-item">📁 Download as .md file</button>
-                            <button id="export-clipboard-btn" class="dropdown-item">📋 Copy to clipboard</button>
+                    <div class="filter-section">
+                        <div class="filter-dropdown">
+                            <button id="filter-btn" class="filter-btn">🏷️ Filter ▼</button>
+                            <div id="filter-dropdown-menu" class="dropdown-menu hidden">
+                                <div class="filter-header">
+                                    <span>Filter by tags:</span>
+                                    <button id="clear-filters-btn" class="clear-filters">Clear</button>
+                                </div>
+                                <div id="filter-tags-list" class="filter-tags"></div>
+                            </div>
+                        </div>
+                        <div id="active-filters" class="active-filters hidden">
+                            <span class="filter-label">Filtered by:</span>
+                            <div id="active-filters-list" class="active-filters-list"></div>
                         </div>
                     </div>
-                    <button id="delete-list-btn" class="delete-btn">Delete List</button>
+                    
+                    <div class="operations-right">
+                        <div class="export-dropdown">
+                            <button id="export-list-btn" class="export-btn">Export ▼</button>
+                            <div id="export-dropdown-menu" class="dropdown-menu hidden">
+                                <button id="export-download-btn" class="dropdown-item">📁 Download as .md file</button>
+                                <button id="export-clipboard-btn" class="dropdown-item">📋 Copy to clipboard</button>
+                            </div>
+                        </div>
+                        <button id="delete-list-btn" class="delete-btn">Delete List</button>
+                    </div>
                 </div>
             </div>
         </main>

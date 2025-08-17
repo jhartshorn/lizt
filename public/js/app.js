@@ -7,6 +7,7 @@ class LisztApp {
         this.touchStartY = 0;
         this.touchStartElement = null;
         this.placeholder = null;
+        this.activeTagFilters = new Set();
         
         this.initializeElements();
         this.attachEventListeners();
@@ -24,6 +25,12 @@ class LisztApp {
         this.cancelBtn = document.getElementById('cancel-btn');
         this.createListBtn = document.getElementById('create-list-btn');
         this.listTitle = document.getElementById('list-title');
+        this.filterBtn = document.getElementById('filter-btn');
+        this.filterDropdownMenu = document.getElementById('filter-dropdown-menu');
+        this.filterTagsList = document.getElementById('filter-tags-list');
+        this.clearFiltersBtn = document.getElementById('clear-filters-btn');
+        this.activeFilters = document.getElementById('active-filters');
+        this.activeFiltersList = document.getElementById('active-filters-list');
         this.exportListBtn = document.getElementById('export-list-btn');
         this.exportDropdownMenu = document.getElementById('export-dropdown-menu');
         this.exportDownloadBtn = document.getElementById('export-download-btn');
@@ -46,6 +53,8 @@ class LisztApp {
         this.newListBtn.addEventListener('click', () => this.showNewListModal());
         this.cancelBtn.addEventListener('click', () => this.hideNewListModal());
         this.createListBtn.addEventListener('click', () => this.createList());
+        this.filterBtn.addEventListener('click', () => this.toggleFilterDropdown());
+        this.clearFiltersBtn.addEventListener('click', () => this.clearAllFilters());
         this.exportListBtn.addEventListener('click', () => this.toggleExportDropdown());
         this.exportDownloadBtn.addEventListener('click', () => this.exportListAsFile());
         this.exportClipboardBtn.addEventListener('click', () => this.exportListToClipboard());
@@ -72,9 +81,12 @@ class LisztApp {
             if (e.target === this.tagsModal) {
                 this.hideTagsModal();
             }
-            // Close export dropdown when clicking outside
+            // Close dropdowns when clicking outside
             if (!e.target.closest('.export-dropdown')) {
                 this.hideExportDropdown();
+            }
+            if (!e.target.closest('.filter-dropdown')) {
+                this.hideFilterDropdown();
             }
         });
     }
@@ -164,6 +176,8 @@ class LisztApp {
             this.synchronizeAllTags();
             
             this.listTitle.textContent = this.currentList.name;
+            this.clearAllFilters(); // Reset filters when switching lists
+            this.renderFilterDropdown();
             this.renderListItems();
             
             this.listsView.classList.add('hidden');
@@ -270,6 +284,106 @@ class LisztApp {
         document.body.removeChild(textArea);
     }
 
+    // Filter functionality
+    toggleFilterDropdown() {
+        this.filterDropdownMenu.classList.toggle('hidden');
+        if (!this.filterDropdownMenu.classList.contains('hidden')) {
+            this.renderFilterDropdown();
+        }
+    }
+
+    hideFilterDropdown() {
+        this.filterDropdownMenu.classList.add('hidden');
+    }
+
+    renderFilterDropdown() {
+        this.filterTagsList.innerHTML = '';
+        const allTags = this.getAllTags();
+        
+        if (allTags.length === 0) {
+            this.filterTagsList.innerHTML = '<div class="no-tags">No tags available</div>';
+            return;
+        }
+        
+        allTags.forEach(tag => {
+            const tagElement = document.createElement('label');
+            tagElement.className = 'filter-tag-option';
+            
+            const isActive = this.activeTagFilters.has(tag);
+            tagElement.innerHTML = `
+                <input type="checkbox" ${isActive ? 'checked' : ''} data-tag="${tag}">
+                <span class="tag-chip ${isActive ? 'active' : ''}">${tag}</span>
+            `;
+            
+            const checkbox = tagElement.querySelector('input');
+            checkbox.addEventListener('change', () => {
+                this.toggleTagFilter(tag);
+            });
+            
+            this.filterTagsList.appendChild(tagElement);
+        });
+    }
+
+    toggleTagFilter(tag) {
+        if (this.activeTagFilters.has(tag)) {
+            this.activeTagFilters.delete(tag);
+        } else {
+            this.activeTagFilters.add(tag);
+        }
+        
+        this.updateFilterUI();
+        this.renderListItems();
+    }
+
+    clearAllFilters() {
+        this.activeTagFilters.clear();
+        this.updateFilterUI();
+        this.renderListItems();
+    }
+
+    updateFilterUI() {
+        // Update filter button text
+        const filterCount = this.activeTagFilters.size;
+        if (filterCount > 0) {
+            this.filterBtn.textContent = `🏷️ Filter (${filterCount}) ▼`;
+            this.filterBtn.classList.add('active');
+        } else {
+            this.filterBtn.textContent = '🏷️ Filter ▼';
+            this.filterBtn.classList.remove('active');
+        }
+        
+        // Update active filters display
+        if (filterCount > 0) {
+            this.activeFilters.classList.remove('hidden');
+            this.renderActiveFilters();
+        } else {
+            this.activeFilters.classList.add('hidden');
+        }
+        
+        // Update dropdown checkboxes
+        this.renderFilterDropdown();
+    }
+
+    renderActiveFilters() {
+        this.activeFiltersList.innerHTML = '';
+        
+        Array.from(this.activeTagFilters).forEach(tag => {
+            const filterChip = document.createElement('span');
+            filterChip.className = 'active-filter-chip';
+            filterChip.innerHTML = `
+                ${tag}
+                <button class="remove-filter" data-tag="${tag}">×</button>
+            `;
+            
+            const removeBtn = filterChip.querySelector('.remove-filter');
+            removeBtn.addEventListener('click', () => {
+                this.toggleTagFilter(tag);
+            });
+            
+            this.activeFiltersList.appendChild(filterChip);
+        });
+    }
+
     async deleteCurrentList() {
         if (!this.currentListId) return;
         
@@ -327,12 +441,31 @@ class LisztApp {
 
         this.listItems.innerHTML = '';
         
-        this.currentList.items
+        const filteredItems = this.getFilteredItems();
+        
+        filteredItems
             .sort((a, b) => a.order - b.order)
             .forEach(item => {
                 const li = this.createListItem(item);
                 this.listItems.appendChild(li);
             });
+    }
+
+    getFilteredItems() {
+        if (!this.currentList || !this.currentList.items) return [];
+        
+        if (this.activeTagFilters.size === 0) {
+            return this.currentList.items;
+        }
+        
+        return this.currentList.items.filter(item => {
+            if (!item.tags || item.tags.length === 0) return false;
+            
+            // Check if item has ALL selected filter tags (AND logic)
+            return Array.from(this.activeTagFilters).every(filterTag => 
+                item.tags.includes(filterTag)
+            );
+        });
     }
 
     createListItem(item) {

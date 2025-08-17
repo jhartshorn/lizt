@@ -56,6 +56,29 @@
         </div>
     </div>
 
+    <!-- Modal for managing tags -->
+    <div id="tags-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3>Manage Tags</h3>
+            <div class="current-tags">
+                <label>Current tags:</label>
+                <div id="current-tags-list" class="tags-list"></div>
+            </div>
+            <div class="add-tag-section">
+                <input type="text" id="new-tag-input" placeholder="Add tag (without #)..." maxlength="20">
+                <button id="add-tag-btn">Add</button>
+            </div>
+            <div class="suggested-tags">
+                <label>Suggested tags:</label>
+                <div id="suggested-tags-list" class="tags-list"></div>
+            </div>
+            <div class="modal-actions">
+                <button id="cancel-tags-btn">Cancel</button>
+                <button id="save-tags-btn">Save</button>
+            </div>
+        </div>
+    </div>
+
     <script src="/js/app.js"></script>
 </body>
 </html>

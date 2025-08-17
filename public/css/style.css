@@ -329,6 +329,34 @@ header {
     outline: none;
 }
 
+.hashtag {
+    color: #667eea;
+    font-weight: 600;
+    background: rgba(102, 126, 234, 0.1);
+    padding: 0.1rem 0.3rem;
+    border-radius: 3px;
+    margin: 0 0.1rem;
+}
+
+.item-tags {
+    background: none;
+    border: none;
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+    opacity: 0;
+}
+
+.list-item:hover .item-tags {
+    opacity: 1;
+}
+
+.item-tags:hover {
+    background: rgba(102, 126, 234, 0.1);
+}
+
 .item-delete {
     background: none;
     border: none;
@@ -471,6 +499,91 @@ header {
     .modal-actions {
         flex-direction: column;
     }
+}
+
+/* Tags modal */
+.tags-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 0.5rem 0 1rem 0;
+    min-height: 2rem;
+}
+
+.tag-chip {
+    background: #667eea;
+    color: white;
+    padding: 0.3rem 0.8rem;
+    border-radius: 15px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    user-select: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.tag-chip.suggested {
+    background: #e2e8f0;
+    color: #667eea;
+    border: 1px solid #667eea;
+}
+
+.tag-chip.suggested:hover {
+    background: #667eea;
+    color: white;
+}
+
+.remove-tag {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 0;
+    margin-left: 0.2rem;
+    border-radius: 50%;
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.remove-tag:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.add-tag-section {
+    display: flex;
+    gap: 0.5rem;
+    margin: 1rem 0;
+}
+
+.add-tag-section input {
+    flex: 1;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.add-tag-section button {
+    background: #667eea;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.current-tags label,
+.suggested-tags label {
+    font-weight: 600;
+    color: #333;
+    display: block;
+    margin-bottom: 0.5rem;
+}
 }
 
 @media (max-width: 480px) {

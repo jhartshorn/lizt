@@ -29,6 +29,13 @@ class LisztApp {
         this.newItemInput = document.getElementById('new-item-input');
         this.addItemBtn = document.getElementById('add-item-btn');
         this.listItems = document.getElementById('list-items');
+        this.tagsModal = document.getElementById('tags-modal');
+        this.currentTagsList = document.getElementById('current-tags-list');
+        this.newTagInput = document.getElementById('new-tag-input');
+        this.addTagBtn = document.getElementById('add-tag-btn');
+        this.suggestedTagsList = document.getElementById('suggested-tags-list');
+        this.cancelTagsBtn = document.getElementById('cancel-tags-btn');
+        this.saveTagsBtn = document.getElementById('save-tags-btn');
     }
 
     attachEventListeners() {
@@ -46,9 +53,19 @@ class LisztApp {
             if (e.key === 'Enter') this.createList();
         });
 
+        this.addTagBtn.addEventListener('click', () => this.addNewTag());
+        this.newTagInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') this.addNewTag();
+        });
+        this.cancelTagsBtn.addEventListener('click', () => this.hideTagsModal());
+        this.saveTagsBtn.addEventListener('click', () => this.saveItemTags());
+
         document.addEventListener('click', (e) => {
             if (e.target === this.newListModal) {
                 this.hideNewListModal();
+            }
+            if (e.target === this.tagsModal) {
+                this.hideTagsModal();
             }
         });
     }
@@ -191,7 +208,8 @@ class LisztApp {
             id: Date.now().toString(),
             text,
             completed: false,
-            order: this.currentList.items.length
+            order: this.currentList.items.length,
+            tags: this.extractHashtags(text)
         };
 
         this.currentList.items.push(newItem);
@@ -242,13 +260,15 @@ class LisztApp {
                 <div class="drag-line"></div>
             </div>
             <input type="checkbox" class="item-checkbox" ${item.completed ? 'checked' : ''}>
-            <span class="item-text ${item.completed ? 'completed' : ''}">${this.escapeHtml(item.text)}</span>
+            <span class="item-text ${item.completed ? 'completed' : ''}">${this.highlightHashtags(this.escapeHtml(item.text))}</span>
             <input type="text" class="item-edit-input hidden" value="${this.escapeHtml(item.text)}" maxlength="200">
+            <button class="item-tags">🏷️</button>
             <button class="item-delete">×</button>
         `;
 
         const checkbox = li.querySelector('.item-checkbox');
         const deleteBtn = li.querySelector('.item-delete');
+        const tagsBtn = li.querySelector('.item-tags');
         const textSpan = li.querySelector('.item-text');
         const editInput = li.querySelector('.item-edit-input');
         const dragHandle = li.querySelector('.drag-handle');
@@ -263,6 +283,10 @@ class LisztApp {
             this.currentList.items = this.currentList.items.filter(i => i.id !== item.id);
             await this.updateList();
             this.renderListItems();
+        });
+
+        tagsBtn.addEventListener('click', () => {
+            this.showTagsModal(item);
         });
 
         textSpan.addEventListener('click', () => {
@@ -441,6 +465,7 @@ class LisztApp {
         const newText = editInput.value.trim();
         if (newText && newText !== item.text) {
             item.text = newText;
+            item.tags = this.extractHashtags(newText);
             await this.updateList();
         }
         this.cancelEdit(item, editInput, textSpan);
@@ -451,6 +476,105 @@ class LisztApp {
         editInput.classList.add('hidden');
         textSpan.classList.remove('hidden');
         textSpan.textContent = item.text;
+    }
+
+    extractHashtags(text) {
+        const hashtagRegex = /#[\w]+/g;
+        const matches = text.match(hashtagRegex);
+        return matches ? matches.map(tag => tag.toLowerCase()) : [];
+    }
+
+    getAllTags() {
+        const allTags = new Set();
+        this.currentList.items.forEach(item => {
+            if (item.tags) {
+                item.tags.forEach(tag => allTags.add(tag));
+            }
+        });
+        return Array.from(allTags).sort();
+    }
+
+    highlightHashtags(text) {
+        return text.replace(/#([\w]+)/g, '<span class="hashtag">#$1</span>');
+    }
+
+    showTagsModal(item) {
+        this.currentEditingItem = item;
+        this.currentEditingTags = [...(item.tags || [])];
+        this.renderCurrentTags();
+        this.renderSuggestedTags();
+        this.tagsModal.classList.remove('hidden');
+        this.newTagInput.focus();
+    }
+
+    hideTagsModal() {
+        this.tagsModal.classList.add('hidden');
+        this.newTagInput.value = '';
+        this.currentEditingItem = null;
+        this.currentEditingTags = [];
+    }
+
+    renderCurrentTags() {
+        this.currentTagsList.innerHTML = '';
+        this.currentEditingTags.forEach(tag => {
+            const tagElement = document.createElement('span');
+            tagElement.className = 'tag-chip';
+            tagElement.innerHTML = `${tag} <button class="remove-tag" data-tag="${tag}">×</button>`;
+            tagElement.querySelector('.remove-tag').addEventListener('click', () => {
+                this.removeTag(tag);
+            });
+            this.currentTagsList.appendChild(tagElement);
+        });
+    }
+
+    renderSuggestedTags() {
+        this.suggestedTagsList.innerHTML = '';
+        const allTags = this.getAllTags();
+        const availableTags = allTags.filter(tag => !this.currentEditingTags.includes(tag));
+        
+        availableTags.forEach(tag => {
+            const tagElement = document.createElement('span');
+            tagElement.className = 'tag-chip suggested';
+            tagElement.textContent = tag;
+            tagElement.addEventListener('click', () => {
+                this.addExistingTag(tag);
+            });
+            this.suggestedTagsList.appendChild(tagElement);
+        });
+    }
+
+    addNewTag() {
+        const tagText = this.newTagInput.value.trim().toLowerCase();
+        if (tagText && !this.currentEditingTags.includes(`#${tagText}`)) {
+            const tag = tagText.startsWith('#') ? tagText : `#${tagText}`;
+            this.currentEditingTags.push(tag);
+            this.newTagInput.value = '';
+            this.renderCurrentTags();
+            this.renderSuggestedTags();
+        }
+    }
+
+    addExistingTag(tag) {
+        if (!this.currentEditingTags.includes(tag)) {
+            this.currentEditingTags.push(tag);
+            this.renderCurrentTags();
+            this.renderSuggestedTags();
+        }
+    }
+
+    removeTag(tag) {
+        this.currentEditingTags = this.currentEditingTags.filter(t => t !== tag);
+        this.renderCurrentTags();
+        this.renderSuggestedTags();
+    }
+
+    async saveItemTags() {
+        if (this.currentEditingItem) {
+            this.currentEditingItem.tags = [...this.currentEditingTags];
+            await this.updateList();
+            this.renderListItems();
+        }
+        this.hideTagsModal();
     }
 
     escapeHtml(text) {

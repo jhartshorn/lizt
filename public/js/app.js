@@ -85,7 +85,7 @@ class LisztApp {
             if (!e.target.closest('.export-dropdown')) {
                 this.hideExportDropdown();
             }
-            if (!e.target.closest('.filter-dropdown')) {
+            if (!e.target.closest('.filter-section')) {
                 this.hideFilterDropdown();
             }
         });

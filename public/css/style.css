@@ -402,7 +402,7 @@ header {
     padding: 1rem;
     border: 2px solid #eee;
     border-radius: 8px;
-    font-size: 1rem;
+    font-size: 16px;
     transition: border-color 0.3s ease;
 }
 
@@ -534,7 +534,7 @@ header {
 
 .item-edit-input {
     flex: 1;
-    font-size: 1rem;
+    font-size: 16px;
     padding: 0.25rem 0.5rem;
     border: 2px solid #667eea;
     border-radius: 4px;
@@ -624,7 +624,7 @@ header {
     padding: 1rem;
     border: 2px solid #eee;
     border-radius: 8px;
-    font-size: 1rem;
+    font-size: 16px;
     margin-bottom: 1.5rem;
     transition: border-color 0.3s ease;
 }
@@ -787,6 +787,7 @@ header {
     padding: 0.5rem;
     border: 1px solid #ddd;
     border-radius: 4px;
+    font-size: 16px;
 }
 
 .add-tag-section button {

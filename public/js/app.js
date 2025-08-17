@@ -528,14 +528,11 @@ class LisztApp {
 
         // Allow normal cursor positioning when clicking in the input
         editInput.addEventListener('click', (e) => {
-            // If text is selected, allow this click to position cursor normally
-            if (editInput.selectionStart === 0 && editInput.selectionEnd === editInput.value.length) {
-                // On next tick, position cursor at click location
-                setTimeout(() => {
-                    const clickPosition = this.getClickPosition(editInput, e);
-                    editInput.setSelectionRange(clickPosition, clickPosition);
-                }, 0);
-            }
+            // Always allow cursor positioning on click
+            setTimeout(() => {
+                const clickPosition = this.getClickPosition(editInput, e);
+                editInput.setSelectionRange(clickPosition, clickPosition);
+            }, 0);
         });
 
         this.addDragAndDropListeners(li, item);

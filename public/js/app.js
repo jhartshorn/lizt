@@ -25,6 +25,9 @@ class LisztApp {
         this.createListBtn = document.getElementById('create-list-btn');
         this.listTitle = document.getElementById('list-title');
         this.exportListBtn = document.getElementById('export-list-btn');
+        this.exportDropdownMenu = document.getElementById('export-dropdown-menu');
+        this.exportDownloadBtn = document.getElementById('export-download-btn');
+        this.exportClipboardBtn = document.getElementById('export-clipboard-btn');
         this.deleteListBtn = document.getElementById('delete-list-btn');
         this.newItemInput = document.getElementById('new-item-input');
         this.addItemBtn = document.getElementById('add-item-btn');
@@ -43,7 +46,9 @@ class LisztApp {
         this.newListBtn.addEventListener('click', () => this.showNewListModal());
         this.cancelBtn.addEventListener('click', () => this.hideNewListModal());
         this.createListBtn.addEventListener('click', () => this.createList());
-        this.exportListBtn.addEventListener('click', () => this.exportList());
+        this.exportListBtn.addEventListener('click', () => this.toggleExportDropdown());
+        this.exportDownloadBtn.addEventListener('click', () => this.exportListAsFile());
+        this.exportClipboardBtn.addEventListener('click', () => this.exportListToClipboard());
         this.deleteListBtn.addEventListener('click', () => this.deleteCurrentList());
         this.addItemBtn.addEventListener('click', () => this.addItem());
         this.newItemInput.addEventListener('keypress', (e) => {
@@ -66,6 +71,10 @@ class LisztApp {
             }
             if (e.target === this.tagsModal) {
                 this.hideTagsModal();
+            }
+            // Close export dropdown when clicking outside
+            if (!e.target.closest('.export-dropdown')) {
+                this.hideExportDropdown();
             }
         });
     }
@@ -174,7 +183,15 @@ class LisztApp {
         this.loadLists();
     }
 
-    exportList() {
+    toggleExportDropdown() {
+        this.exportDropdownMenu.classList.toggle('hidden');
+    }
+
+    hideExportDropdown() {
+        this.exportDropdownMenu.classList.add('hidden');
+    }
+
+    exportListAsFile() {
         if (!this.currentListId) return;
         
         const link = document.createElement('a');
@@ -183,6 +200,74 @@ class LisztApp {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+        
+        this.hideExportDropdown();
+    }
+
+    async exportListToClipboard() {
+        if (!this.currentList) return;
+
+        try {
+            const markdown = this.generateMarkdown(this.currentList);
+            await navigator.clipboard.writeText(markdown);
+            
+            // Show feedback
+            const btn = this.exportClipboardBtn;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '✅ Copied!';
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+            }, 2000);
+            
+        } catch (error) {
+            console.error('Failed to copy to clipboard:', error);
+            // Fallback for older browsers
+            this.fallbackCopyToClipboard(this.generateMarkdown(this.currentList));
+        }
+        
+        this.hideExportDropdown();
+    }
+
+    generateMarkdown(list) {
+        let markdown = `# ${list.name}\n\n`;
+        
+        if (list.items.length === 0) {
+            markdown += '*No items in this list*\n';
+        } else {
+            list.items
+                .sort((a, b) => a.order - b.order)
+                .forEach(item => {
+                    const checkbox = item.completed ? '[x]' : '[ ]';
+                    markdown += `- ${checkbox} ${item.text}\n`;
+                });
+        }
+        
+        markdown += `\n*Exported from Lizt on ${new Date().toLocaleDateString()}*\n`;
+        return markdown;
+    }
+
+    fallbackCopyToClipboard(text) {
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.opacity = '0';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        
+        try {
+            document.execCommand('copy');
+            const btn = this.exportClipboardBtn;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '✅ Copied!';
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+            }, 2000);
+        } catch (error) {
+            console.error('Fallback copy failed:', error);
+        }
+        
+        document.body.removeChild(textArea);
     }
 
     async deleteCurrentList() {

@@ -135,9 +135,21 @@ header {
     word-break: break-word;
 }
 
-.list-actions {
+/* List operations at bottom */
+.list-operations {
     display: flex;
-    gap: 1rem;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Export dropdown */
+.export-dropdown {
+    position: relative;
 }
 
 .export-btn {
@@ -150,11 +162,52 @@ header {
     font-size: 0.9rem;
     transition: all 0.3s ease;
     white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 .export-btn:hover {
     background: #5a67d8;
     transform: translateY(-2px);
+}
+
+.dropdown-menu {
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    margin-bottom: 0.5rem;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    min-width: 200px;
+    z-index: 1000;
+}
+
+.dropdown-item {
+    display: block;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: none;
+    background: none;
+    text-align: left;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    font-size: 0.9rem;
+    color: #333;
+}
+
+.dropdown-item:first-child {
+    border-radius: 8px 8px 0 0;
+}
+
+.dropdown-item:last-child {
+    border-radius: 0 0 8px 8px;
+}
+
+.dropdown-item:hover {
+    background: #f8f9ff;
 }
 
 .delete-btn {
@@ -475,13 +528,12 @@ header {
     }
     
     .list-header {
-        flex-direction: column;
-        gap: 1rem;
         text-align: center;
     }
     
-    .list-actions {
-        justify-content: center;
+    .list-operations {
+        flex-direction: column;
+        gap: 1rem;
     }
     
     .add-item-section {

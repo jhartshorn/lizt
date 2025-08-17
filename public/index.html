@@ -28,10 +28,6 @@
             <div id="list-view" class="view hidden">
                 <div class="list-header">
                     <h2 id="list-title"></h2>
-                    <div class="list-actions">
-                        <button id="export-list-btn" class="export-btn">Export</button>
-                        <button id="delete-list-btn" class="delete-btn">Delete List</button>
-                    </div>
                 </div>
                 
                 <div class="add-item-section">
@@ -40,6 +36,17 @@
                 </div>
 
                 <ul id="list-items" class="list-items"></ul>
+
+                <div class="list-operations">
+                    <div class="export-dropdown">
+                        <button id="export-list-btn" class="export-btn">Export ▼</button>
+                        <div id="export-dropdown-menu" class="dropdown-menu hidden">
+                            <button id="export-download-btn" class="dropdown-item">📁 Download as .md file</button>
+                            <button id="export-clipboard-btn" class="dropdown-item">📋 Copy to clipboard</button>
+                        </div>
+                    </div>
+                    <button id="delete-list-btn" class="delete-btn">Delete List</button>
+                </div>
             </div>
         </main>
     </div>

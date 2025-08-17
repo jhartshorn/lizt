@@ -24,6 +24,7 @@ class LisztApp {
         this.cancelBtn = document.getElementById('cancel-btn');
         this.createListBtn = document.getElementById('create-list-btn');
         this.listTitle = document.getElementById('list-title');
+        this.exportListBtn = document.getElementById('export-list-btn');
         this.deleteListBtn = document.getElementById('delete-list-btn');
         this.newItemInput = document.getElementById('new-item-input');
         this.addItemBtn = document.getElementById('add-item-btn');
@@ -35,6 +36,7 @@ class LisztApp {
         this.newListBtn.addEventListener('click', () => this.showNewListModal());
         this.cancelBtn.addEventListener('click', () => this.hideNewListModal());
         this.createListBtn.addEventListener('click', () => this.createList());
+        this.exportListBtn.addEventListener('click', () => this.exportList());
         this.deleteListBtn.addEventListener('click', () => this.deleteCurrentList());
         this.addItemBtn.addEventListener('click', () => this.addItem());
         this.newItemInput.addEventListener('keypress', (e) => {
@@ -150,6 +152,17 @@ class LisztApp {
         this.currentListId = null;
         this.currentList = null;
         this.loadLists();
+    }
+
+    exportList() {
+        if (!this.currentListId) return;
+        
+        const link = document.createElement('a');
+        link.href = `/api/lists/${this.currentListId}/export`;
+        link.download = '';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     }
 
     async deleteCurrentList() {

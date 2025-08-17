@@ -102,6 +102,37 @@ app.delete('/api/lists/:id', async (req, res) => {
   }
 });
 
+app.get('/api/lists/:id/export', async (req, res) => {
+  try {
+    const lists = await loadLists();
+    const list = lists.find(l => l.id === req.params.id);
+    if (!list) {
+      return res.status(404).json({ error: 'List not found' });
+    }
+
+    let markdown = `# ${list.name}\n\n`;
+    
+    if (list.items.length === 0) {
+      markdown += '*No items in this list*\n';
+    } else {
+      list.items
+        .sort((a, b) => a.order - b.order)
+        .forEach(item => {
+          const checkbox = item.completed ? '[x]' : '[ ]';
+          markdown += `- ${checkbox} ${item.text}\n`;
+        });
+    }
+    
+    markdown += `\n*Exported from Lizt on ${new Date().toLocaleDateString()}*\n`;
+
+    res.setHeader('Content-Type', 'text/markdown');
+    res.setHeader('Content-Disposition', `attachment; filename="${list.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.md"`);
+    res.send(markdown);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to export list' });
+  }
+});
+
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });

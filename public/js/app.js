@@ -243,12 +243,14 @@ class LisztApp {
             </div>
             <input type="checkbox" class="item-checkbox" ${item.completed ? 'checked' : ''}>
             <span class="item-text ${item.completed ? 'completed' : ''}">${this.escapeHtml(item.text)}</span>
+            <input type="text" class="item-edit-input hidden" value="${this.escapeHtml(item.text)}" maxlength="200">
             <button class="item-delete">×</button>
         `;
 
         const checkbox = li.querySelector('.item-checkbox');
         const deleteBtn = li.querySelector('.item-delete');
         const textSpan = li.querySelector('.item-text');
+        const editInput = li.querySelector('.item-edit-input');
         const dragHandle = li.querySelector('.drag-handle');
 
         checkbox.addEventListener('change', async () => {
@@ -261,6 +263,22 @@ class LisztApp {
             this.currentList.items = this.currentList.items.filter(i => i.id !== item.id);
             await this.updateList();
             this.renderListItems();
+        });
+
+        textSpan.addEventListener('click', () => {
+            this.startEditing(item, textSpan, editInput);
+        });
+
+        editInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                this.saveEdit(item, editInput, textSpan);
+            } else if (e.key === 'Escape') {
+                this.cancelEdit(item, editInput, textSpan);
+            }
+        });
+
+        editInput.addEventListener('blur', () => {
+            this.saveEdit(item, editInput, textSpan);
         });
 
         this.addDragAndDropListeners(li, item);
@@ -410,6 +428,29 @@ class LisztApp {
 
         await this.updateList();
         this.renderListItems();
+    }
+
+    startEditing(item, textSpan, editInput) {
+        textSpan.classList.add('hidden');
+        editInput.classList.remove('hidden');
+        editInput.focus();
+        editInput.select();
+    }
+
+    async saveEdit(item, editInput, textSpan) {
+        const newText = editInput.value.trim();
+        if (newText && newText !== item.text) {
+            item.text = newText;
+            await this.updateList();
+        }
+        this.cancelEdit(item, editInput, textSpan);
+    }
+
+    cancelEdit(item, editInput, textSpan) {
+        editInput.value = item.text;
+        editInput.classList.add('hidden');
+        textSpan.classList.remove('hidden');
+        textSpan.textContent = item.text;
     }
 
     escapeHtml(text) {
